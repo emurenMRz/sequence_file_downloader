@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import urllib.parse
-import urllib.request
 import http.client
 import sys
 import os
@@ -170,25 +169,24 @@ def download(url, verbose = False):
         conn.close()
 
 
-def make_output_dir(output_dir):
+def make_output_dir(output_dir = './'):
     """
-    Create a directory with the specified name in the same directory as 
-    the script file, and make it the current directory.
+    Creates a directory with the specified name and makes it the current 
+    directory.
 
     Parameters
     ----------
-    output_dir : str
+    output_dir : str. default './'
         Directory path of the output destination.
     """
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        base_dir = os.path.join(script_dir, output_dir)
-        if not os.path.exists(base_dir):
-            os.makedirs(base_dir)
-        os.chdir(base_dir)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        os.chdir(output_dir)
         print('Output directory: {}'.format(os.getcwd()))
-    except FileExistsError as e:
-        pass
+    except Exception as e:
+        print(e)
+        exit()
 
 
 if __name__ == '__main__':
@@ -209,11 +207,13 @@ if __name__ == '__main__':
             The singular number and range can be mixed and matched.
             '''))
     parser.add_argument('-v', '--verbose', action = 'store_true', help = 'show detailed communication logs.')
+    parser.add_argument('-o', '--output', type = str, help = 'specifies the path to the output directory.')
     parser.add_argument('Target_URL', type = str, help = 'the URL of the target files, including the sequential number range.')
     args = parser.parse_args()
 
     if len(sys.argv) <= 1:
         parser.print_help()
         exit()
-    make_output_dir('download')
+    output_dir = args.output if args.output else './download'
+    make_output_dir(output_dir)
     download(args.Target_URL, args.verbose)
