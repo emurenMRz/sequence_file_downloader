@@ -3,7 +3,7 @@ Download the sequential numbering file.
 
 ## usage
 
-> `sndl.py [-h] [-v] Target_URL`
+> `sndl.py [-h] [-v] [-o OUTPUT] Target_URL`
 
 ## Target_URL Examples
 
