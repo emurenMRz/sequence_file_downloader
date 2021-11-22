@@ -16,6 +16,9 @@ If the number is skipped.
 The singular number and range can be mixed and matched.
 > `http://www.example.com/c[1,2-5,7,10-13,22-25].jpg`
 
+Zero-padding is done according to the number of digits in the number (or the starting number in the case of a range specification).
+> `http://www.example.com/[0001-0025].jpg`
+
 ## License
 
 These codes are licensed under CC0.

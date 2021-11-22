@@ -27,6 +27,8 @@ def parse_url(url):
     {'scheme': 'http', 'host': 'www.example.com', 'port': 0, 'path': '/b[*].jpg', 'ranges': ['2', '4', '8', '10']}
     >>> print(parse_url('http://www.example.com/c[1,2-5,7,10-13,22-25].jpg'))
     {'scheme': 'http', 'host': 'www.example.com', 'port': 0, 'path': '/c[*].jpg', 'ranges': ['1', '2-5', '7', '10-13', '22-25']}
+    >>> print(parse_url('http://www.example.com/[0001-0025].jpg'))
+    {'scheme': 'http', 'host': 'www.example.com', 'port': 0, 'path': '/[*].jpg', 'ranges': ['0001-0025']}
     """
     parsed_url = urllib.parse.urlparse(url)
 
@@ -46,6 +48,31 @@ def parse_url(url):
         'path': path[:m.start()] + '[*]' + path[m.end():],
         'ranges': [x.strip() for x in m.group()[1:-1].split(',') if not x.strip() == '']
         }
+
+
+def get_digit(range_str):
+    """
+    Get the number of display digits.
+
+    Parameters
+    ----------
+    range_str : str
+        A string indicating a range. Corresponds to either of the
+        following formats.
+
+        * '[0-9]+'
+        * '[0-9]+-[0-9]+'
+
+    Returns
+    -------
+    digit
+    """
+    if r := re.fullmatch(r'([0-9]+)-([0-9]+)', range_str):
+        return len(r.groups()[0])
+    elif r := re.fullmatch(r'([0-9]+)', range_str):
+        return len(r.group())
+    else:
+        raise ValueError("Wrong range format.")
 
 
 def parse_range(range_str):
@@ -159,9 +186,10 @@ def download(url, verbose = False):
     try:
         reconnect = False
         for r in o['ranges']:
+            digit = get_digit(r)
             for i in parse_range(r):
                 if reconnect: do_reconnecting(conn)
-                path = o['path'].replace('[*]', str(i))
+                path = o['path'].replace('[*]', '{:>0' + str(digit) + '}').format(str(i))
                 reconnect = get_content(conn, path, os.path.basename(path))
     except Exception as e:
         print(e)
@@ -205,6 +233,9 @@ if __name__ == '__main__':
 
             * http://www.example.com/c[1,2-5,7,10-13,22-25].jpg  
             The singular number and range can be mixed and matched.
+
+            * `http://www.example.com/[0001-0025].jpg`
+            Zero-padding is done according to the number of digits in the number (or the starting number in the case of a range specification).
             '''))
     parser.add_argument('-v', '--verbose', action = 'store_true', help = 'show detailed communication logs.')
     parser.add_argument('-o', '--output', type = str, help = 'specifies the path to the output directory.')
